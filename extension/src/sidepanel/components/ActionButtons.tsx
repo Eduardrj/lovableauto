@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, FolderSync, History } from 'lucide-react';
+import { RefreshCw, FolderSync, History, Settings } from 'lucide-react';
 import { useProjectStore } from '../stores/projectStore';
 
 interface Props {
@@ -31,6 +31,14 @@ export const ActionButtons: React.FC<Props> = ({ onSync, onShowHistory, isSyncin
       >
         <History className="w-3 h-3" />
         Histórico
+      </button>
+      <button
+        onClick={() => useProjectStore.getState().clearProject()}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-surface-overlay text-text-secondary border border-surface-border hover:bg-surface-border/50 transition-all"
+        title="Trocar Projeto"
+      >
+        <Settings className="w-3 h-3" />
+        Trocar
       </button>
     </div>
   );

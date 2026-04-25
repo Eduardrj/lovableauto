@@ -259,6 +259,52 @@ export class GithubService {
 
     return data.commit.sha;
   }
+
+  /**
+   * Check if a repository exists.
+   */
+  async repoExists(userId: string, owner: string, repo: string): Promise<boolean> {
+    try {
+      const octokit = await this.getOctokit(userId);
+      await octokit.rest.repos.get({ owner, repo });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Create a new repository.
+   */
+  async createRepo(userId: string, name: string, description?: string, isPrivate = true) {
+    const octokit = await this.getOctokit(userId);
+    const { data } = await octokit.rest.repos.createForAuthenticatedUser({
+      name,
+      description,
+      private: isPrivate,
+      auto_init: true, // Creates an initial commit with README
+    });
+    return data;
+  }
+
+  /**
+   * List user's repositories.
+   */
+  async listUserRepos(userId: string) {
+    const octokit = await this.getOctokit(userId);
+    const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+      sort: 'updated',
+      per_page: 50,
+    });
+    return data.map((repo) => ({
+      name: repo.name,
+      owner: repo.owner.login,
+      fullName: repo.full_name,
+      url: repo.html_url,
+      description: repo.description,
+      defaultBranch: repo.default_branch,
+    }));
+  }
 }
 
 export const githubService = new GithubService();

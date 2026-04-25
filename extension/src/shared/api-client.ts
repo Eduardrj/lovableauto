@@ -71,8 +71,25 @@ class ApiClient {
     return this.request<{ projects: any[] }>('/projects');
   }
 
+  async listRepos() {
+    return this.request<{ repos: any[] }>('/projects/repos');
+  }
+
+  async ensureRepo(owner: string, repoName: string) {
+    return this.request<{ status: string; owner: string; repo: string }>('/projects/ensure-repo', {
+      method: 'POST',
+      body: JSON.stringify({ owner, repoName }),
+    });
+  }
+
   async getProjectContext(projectId: string) {
     return this.request<any>(`/projects/${projectId}/context`);
+  }
+
+  async syncProjectFiles(projectId: string) {
+    return this.request<{ fileCount: number }>(`/projects/${projectId}/sync`, {
+      method: 'POST',
+    });
   }
 
   // ─── Chat ───

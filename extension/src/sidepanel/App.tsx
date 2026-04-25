@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProjectHeader } from './components/ProjectHeader';
 import { ConnectionStatus } from './components/ConnectionStatus';
+import { ProjectSelector } from './components/ProjectSelector';
 import { ChatPanel } from './components/ChatPanel';
 import { HistoryList } from './components/HistoryList';
 import { ActionButtons } from './components/ActionButtons';
@@ -10,10 +11,11 @@ import type { AppView } from '../shared/types';
 import { Github, ArrowLeft } from 'lucide-react';
 
 const App: React.FC = () => {
-  const { isAuthenticated, init, connectionStatus } = useProjectStore();
+  const { isAuthenticated, init, connectionStatus, currentProject } = useProjectStore();
   const [view, setView] = useState<AppView>('chat');
   const [historyEntries, setHistoryEntries] = useState<any[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     init().finally(() => setIsInitializing(false));
@@ -37,6 +39,22 @@ const App: React.FC = () => {
     chrome.runtime?.onMessage?.addListener(handleMessage);
     return () => chrome.runtime?.onMessage?.removeListener(handleMessage);
   }, []);
+
+  const handleSync = async () => {
+    const project = useProjectStore.getState().currentProject;
+    if (!project) return;
+
+    setIsSyncing(true);
+    try {
+      await apiClient.syncProjectFiles(project.id);
+      console.log('[LovableAuto] Sync successful');
+    } catch (err) {
+      console.error('Sync failed:', err);
+      alert('Falha ao sincronizar arquivos. Verifique se o repositório é acessível.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleShowHistory = async () => {
     const project = useProjectStore.getState().currentProject;
@@ -115,7 +133,9 @@ const App: React.FC = () => {
       <ProjectHeader />
       <ConnectionStatus />
 
-      {view === 'history' ? (
+      {!currentProject ? (
+        <ProjectSelector />
+      ) : view === 'history' ? (
         <>
           <div className="flex items-center gap-2 px-3 py-2 border-b border-surface-border">
             <button
@@ -133,7 +153,11 @@ const App: React.FC = () => {
       ) : (
         <>
           <ChatPanel />
-          <ActionButtons onShowHistory={handleShowHistory} />
+          <ActionButtons 
+            onSync={handleSync} 
+            isSyncing={isSyncing} 
+            onShowHistory={handleShowHistory} 
+          />
         </>
       )}
     </div>

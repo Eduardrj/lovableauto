@@ -18,6 +18,7 @@ interface ProjectState {
   loadProjects: () => Promise<void>;
   setAuthenticated: (user: any) => void;
   logout: () => void;
+  clearProject: () => void;
   clearError: () => void;
 }
 
@@ -63,11 +64,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     set({ connectionStatus: 'connecting', errorMessage: null });
     try {
+      // Ensure repo exists first
+      const { owner, repo } = await apiClient.ensureRepo(info.githubOwner, info.githubRepo);
+
       const { project } = await apiClient.connectProject({
         lovableProjectUrl: info.projectUrl,
-        githubOwner: info.githubOwner,
-        githubRepo: info.githubRepo,
-        defaultBranch: info.branch,
+        githubOwner: owner,
+        githubRepo: repo,
+        defaultBranch: info.branch || 'main',
       });
       set({ currentProject: project, connectionStatus: 'connected', errorMessage: null });
     } catch (err: any) {
@@ -79,10 +83,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   connectManual: async (projectId, projectUrl, owner, repo) => {
     set({ connectionStatus: 'connecting', errorMessage: null });
     try {
+      // Ensure repo exists first
+      const { owner: finalOwner, repo: finalRepo } = await apiClient.ensureRepo(owner, repo);
+
       const { project } = await apiClient.connectProject({
         lovableProjectUrl: projectUrl,
-        githubOwner: owner,
-        githubRepo: repo,
+        githubOwner: finalOwner,
+        githubRepo: finalRepo,
         defaultBranch: 'main',
       });
       set({ currentProject: project, connectionStatus: 'connected', errorMessage: null });
@@ -119,5 +126,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       currentProject: null,
       connectionStatus: 'disconnected',
     });
+  },
+
+  clearProject: () => {
+    set({ currentProject: null, connectionStatus: 'disconnected' });
+  },
+
+  clearError: () => {
+    set({ errorMessage: null });
   },
 }));

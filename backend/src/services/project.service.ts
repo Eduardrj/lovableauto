@@ -100,6 +100,17 @@ export class ProjectService {
 
     return files;
   }
+
+  async ensureRepo(userId: string, repoName: string, owner: string) {
+    const exists = await githubService.repoExists(userId, owner, repoName);
+    
+    if (exists) {
+      return { status: 'exists', owner, repo: repoName };
+    }
+
+    const repo = await githubService.createRepo(userId, repoName, 'Criado automaticamente pelo LovableAuto');
+    return { status: 'created', owner: repo.owner.login, repo: repo.name };
+  }
 }
 
 export const projectService = new ProjectService();

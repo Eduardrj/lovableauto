@@ -35,6 +35,13 @@ export const ProjectHeader: React.FC = () => {
               />
             )}
             <button
+              onClick={() => useProjectStore.getState().clearProject()}
+              className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-overlay transition-colors"
+              title="Trocar Projeto"
+            >
+              <Settings className="w-3.5 h-3.5" />
+            </button>
+            <button
               onClick={logout}
               className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-overlay transition-colors"
               title="Sair"
